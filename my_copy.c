@@ -18,10 +18,15 @@ int main(int argc, char *argv[]) {
         const char *warn_msg = "Target file already exists. Overwrite? (y/n): ";
         while (1) {
             write(STDOUT_FILENO, warn_msg, strlen(warn_msg));
+
             if (read(STDIN_FILENO, &response, 1) <= 0) return 1;
 
-            char dummy;
-            while (read(STDIN_FILENO, &dummy, 1) > 0 && dummy != '\n');
+            if (response != '\n') {
+                char dummy;
+                while (read(STDIN_FILENO, &dummy, 1) > 0 && dummy != '\n');
+            } else {
+                continue;
+            }
 
             if (response == 'y' || response == 'Y') {
                 break;

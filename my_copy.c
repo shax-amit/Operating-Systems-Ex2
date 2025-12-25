@@ -13,22 +13,21 @@ int main(int argc, char *argv[]) {
         write(STDERR_FILENO, usage, strlen(usage));
         return 1;
     }
-
     if (access(argv[2], F_OK) == 0) {
         char response;
-        const char *warn = "Target file already exists. Overwrite? (y/n): ";
+        const char *warn_msg = "Target file already exists. Overwrite? (y/n): ";
         while (1) {
-            write(STDOUT_FILENO, warn, strlen(warn));
+            write(STDOUT_FILENO, warn_msg, strlen(warn_msg));
             if (read(STDIN_FILENO, &response, 1) <= 0) return 1;
 
-            char temp;
-            while (read(STDIN_FILENO, &temp, 1) > 0 && temp != '\n');
+            char dummy;
+            while (read(STDIN_FILENO, &dummy, 1) > 0 && dummy != '\n');
 
             if (response == 'y' || response == 'Y') {
                 break;
             } else if (response == 'n' || response == 'N') {
-                const char *cancel = "Copy canceled by user.\n";
-                write(STDOUT_FILENO, cancel, strlen(cancel));
+                const char *cancel_msg = "The copy was canceled at the user's request.\n";
+                write(STDOUT_FILENO, cancel_msg, strlen(cancel_msg));
                 return 0;
             }
         }

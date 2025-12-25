@@ -5,27 +5,31 @@
 #define BUFFER_SIZE 4096
 
 int main(int argc, char *argv[]) {
+    /* Check if exactly two arguments are provided [cite: 31, 32] */
     if (argc != 3) {
         const char *usage = "Usage: ./my_copy <source> <dest>\n";
         write(STDERR_FILENO, usage, 33);
         return 1;
     }
 
+    /* access: Check if destination file already exists [cite: 30, 35] */
     if (access(argv[2], F_OK) == 0) {
         char response;
         const char *warn_msg = "Target file already exists. Overwrite? (y/n): ";
         while (1) {
             write(STDOUT_FILENO, warn_msg, 47);
 
+            /* Read the first character [cite: 40] */
             if (read(STDIN_FILENO, &response, 1) <= 0) return 1;
 
-            if (response != '\n') {
-                char dummy;
-                while (read(STDIN_FILENO, &dummy, 1) > 0 && dummy != '\n');
-            } else {
-                continue;
-            }
+            /* If the user just pressed Enter, skip and ask again */
+            if (response == '\n') continue;
 
+            /* Flush everything else in the line until newline is found [cite: 39] */
+            char dummy;
+            while (read(STDIN_FILENO, &dummy, 1) > 0 && dummy != '\n');
+
+            /* Now check the captured response [cite: 37, 38] */
             if (response == 'y' || response == 'Y') {
                 break;
             } else if (response == 'n' || response == 'N') {
@@ -33,9 +37,11 @@ int main(int argc, char *argv[]) {
                 write(STDOUT_FILENO, cancel_msg, 46);
                 return 0;
             }
+            /* If input was invalid, the loop repeats [cite: 39] */
         }
     }
 
+    /* open: Open source for reading only [cite: 29, 66] */
     int src_fd = open(argv[1], O_RDONLY);
     if (src_fd < 0) {
         const char *err_src = "Error: Cannot open source file\n";
@@ -43,6 +49,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    /* open: Open destination for writing, create if missing, truncate if exists [cite: 29, 67] */
     int dest_fd = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (dest_fd < 0) {
         const char *err_dest = "Error: Cannot open destination file\n";
@@ -54,7 +61,9 @@ int main(int argc, char *argv[]) {
     char buffer[BUFFER_SIZE];
     ssize_t n_read, n_written;
 
+    /* read: Read data into buffer using fixed size for efficiency [cite: 43, 47] */
     while ((n_read = read(src_fd, buffer, BUFFER_SIZE)) > 0) {
+        /* write: Write captured bytes to destination [cite: 47] */
         n_written = write(dest_fd, buffer, n_read);
         if (n_written != n_read) {
             const char *err_write = "Error: Failed to write to destination\n";
@@ -65,11 +74,13 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    /* Check if read loop exited due to an error [cite: 41, 71] */
     if (n_read < 0) {
         const char *err_read = "Error: Failed to read from source\n";
         write(STDERR_FILENO, err_read, 34);
     }
 
+    /* close: Release file descriptors [cite: 30, 68] */
     close(src_fd);
     close(dest_fd);
 
